@@ -1,6 +1,6 @@
 from family_budget.app import get_app  # noqa
-from family_budget.db import Base
 from family_budget.deps import get_engine
+from family_budget.models import Base
 from sqlalchemy import DDL
 
 

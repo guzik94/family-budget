@@ -17,6 +17,9 @@ fastapi = "^0.89.1"
 uvicorn = { version = "^0.20.0", extras = ["standard"] }
 SQLAlchemy = "^1.4.46"
 psycopg2-binary = "^2.9.5"
+python-jose = {version = "^3.3.0", extras = ["cryptography"]}
+passlib = {version = "^1.7.4", extras = ["bcrypt"]}
+python-multipart = "^0.0.5"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.21.0"
