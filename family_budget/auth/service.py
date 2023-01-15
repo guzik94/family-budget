@@ -16,7 +16,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 def get_user(context, username) -> UserInDB | None:
     user = query_user(context.session_factory, username)
     if user:
-        return UserInDB(username=user.username, hashed_password=user.hashed_password)
+        return UserInDB(username=user.username, hashed_password=user.hashed_password, id=user.id)
     else:
         return None
 
@@ -51,7 +51,7 @@ def create_access_token(data: dict, expires_delta: timedelta):
     return encoded_jwt
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), context: Context = Depends(get_context)):
+async def get_current_user(token: str = Depends(oauth2_scheme), context: Context = Depends(get_context)) -> UserInDB:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
