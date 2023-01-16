@@ -1,6 +1,6 @@
 import pytest as pytest
 from family_budget.app import app
-from family_budget.auth.service import get_current_user, get_password_hash
+from family_budget.auth.service import get_password_hash
 from family_budget.crud.user import query_user
 from family_budget.database_settings import DatabaseSettings, create_sync_engine
 from family_budget.deps import get_db
@@ -9,7 +9,7 @@ from family_budget.schemas.auth import UserInDB
 from family_budget.schemas.budget import BudgetCreate
 from family_budget.schemas.expense import ExpenseCreate
 from family_budget.schemas.income import IncomeCreate
-from family_budget.schemas.user import UserCreate
+from family_budget.schemas.user import UserCreate, UserShareCreate
 from fastapi.testclient import TestClient
 from sqlalchemy import DDL
 from sqlalchemy.orm import Session, sessionmaker
@@ -55,7 +55,6 @@ def override_get_current_user():
 
 
 app.dependency_overrides[get_db] = override_get_db
-app.dependency_overrides[get_current_user] = override_get_current_user
 
 
 @pytest.fixture()
@@ -79,23 +78,42 @@ def budget_create_data():
     return data
 
 
-def test_create_user_and_assert_it_exists(client: TestClient, test_session: Session):
-    username = "testuser"
-    data = UserCreate(username=username, password="testpassword").dict()
-    response = client.post("/users/", json=data)
+def token_header_for_userdata(client, username, password):
+    response = client.post(
+        "/auth/token", data={"grant_type": "password", "username": f"{username}", "password": f"{password}"}
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+
+    headers = {"Authorization": f"Bearer {token}"}
+    return headers
+
+
+userdata = UserCreate(**{"username": "testuser", "password": "testpassword"})
+
+
+@pytest.fixture
+def token_header(client: TestClient):
+    response = client.post("/users/", json=userdata.dict())
     assert response.status_code == 201
-    assert response.json() == {"id": 1, "username": username}
-    assert query_user(test_session, "testuser") is not None
+    return token_header_for_userdata(client, **userdata.dict())
 
 
-def test_create_budget_and_assert_it_exists(client: TestClient, test_session: Session):
-    data = UserCreate(username="testuser", password="testpassword").dict()
-    client.post("/users/", json=data)
+def test_create_user_and_assert_it_exists(
+    client: TestClient,
+    test_session: Session,
+):
+    response = client.post("/users/", json=userdata.dict())
+    assert response.status_code == 201
+    assert response.json() == {"id": 1, "username": userdata.username}
+    assert query_user(test_session, userdata.username) is not None
 
-    response = client.post("/budgets/", json=budget_create_data())
+
+def test_create_budget_and_assert_it_exists(client: TestClient, test_session: Session, token_header: dict):
+    response = client.post("/budgets/", json=budget_create_data(), headers=token_header)
     assert response.status_code == 201
 
-    response = client.get("/budgets/")
+    response = client.get("/budgets/", headers=token_header)
     assert response.status_code == 200
     assert response.json() == [
         {
@@ -109,15 +127,12 @@ def test_create_budget_and_assert_it_exists(client: TestClient, test_session: Se
     ]
 
 
-def test_create_two_budgets(client: TestClient, test_session: Session):
-    data = UserCreate(username="testuser", password="testpassword").dict()
-    client.post("/users/", json=data)
-
+def test_create_two_budgets(client: TestClient, test_session: Session, token_header: dict):
     for _ in range(2):
-        response = client.post("/budgets/", json=budget_create_data())
+        response = client.post("/budgets/", json=budget_create_data(), headers=token_header)
         assert response.status_code == 201
 
-    response = client.get("/budgets/")
+    response = client.get("/budgets/", headers=token_header)
     assert response.status_code == 200
     assert response.json() == [
         {
@@ -139,36 +154,31 @@ def test_create_two_budgets(client: TestClient, test_session: Session):
     ]
 
 
-def test_get_categories(client: TestClient, test_session: Session):
+def test_get_categories(client: TestClient, test_session: Session, token_header: dict):
     response = client.get("/categories/")
     assert response.status_code == 200
     assert response.json() == []
 
-    data = UserCreate(username="testuser", password="testpassword").dict()
-    response = client.post("/users/", json=data)
-    assert response.status_code == 201
-
-    client.post("/budgets/", json=budget_create_data())
-    client.post("/budgets/", json=budget_create_data())
+    client.post("/budgets/", json=budget_create_data(), headers=token_header)
+    client.post("/budgets/", json=budget_create_data(), headers=token_header)
 
     response = client.get("/categories/")
     assert response.status_code == 200
     assert response.json() == [{"id": 1, "name": "testcategory"}]
 
 
-def test_create_budget_and_update_its_income(client: TestClient, test_session: Session):
-    data = UserCreate(username="testuser", password="testpassword").dict()
-    client.post("/users/", json=data)
-
-    response = client.post("/budgets/", json=budget_create_data())
+def test_create_budget_and_update_its_income(client: TestClient, test_session: Session, token_header: dict):
+    response = client.post("/budgets/", json=budget_create_data(), headers=token_header)
     budget_id = response.json()["id"]
 
     response = client.put(
-        f"/budgets/{budget_id}/income", json=IncomeCreate(name="changed income name", amount=2.34).dict()
+        f"/budgets/{budget_id}/income",
+        json=IncomeCreate(name="changed income name", amount=2.34).dict(),
+        headers=token_header,
     )
     assert response.status_code == 200
 
-    response = client.get("/budgets/")
+    response = client.get("/budgets/", headers=token_header)
     assert response.status_code == 200
     assert response.json() == [
         {
@@ -182,20 +192,18 @@ def test_create_budget_and_update_its_income(client: TestClient, test_session: S
     ]
 
 
-def test_create_budget_and_add_expense_to_it(client: TestClient, test_session: Session):
-    data = UserCreate(username="testuser", password="testpassword").dict()
-    client.post("/users/", json=data)
-
-    response = client.post("/budgets/", json=budget_create_data())
+def test_create_budget_and_add_expense_to_it(client: TestClient, test_session: Session, token_header: dict):
+    response = client.post("/budgets/", json=budget_create_data(), headers=token_header)
     budget_id = response.json()["id"]
 
     response = client.post(
         f"/budgets/{budget_id}/expenses",
         json=ExpenseCreate(name="added expense", amount=2.34, category="testcategory").dict(),
+        headers=token_header,
     )
     assert response.status_code == 201
 
-    response = client.get("/budgets/")
+    response = client.get("/budgets/", headers=token_header)
     assert response.status_code == 200
     assert response.json() == [
         {
@@ -210,20 +218,17 @@ def test_create_budget_and_add_expense_to_it(client: TestClient, test_session: S
     ]
 
 
-def test_create_budget_and_delete_its_expense(client: TestClient, test_session: Session):
-    data = UserCreate(username="testuser", password="testpassword").dict()
-    client.post("/users/", json=data)
-
-    response = client.post("/budgets/", json=budget_create_data())
+def test_create_budget_and_delete_its_expense(client: TestClient, test_session: Session, token_header: dict):
+    response = client.post("/budgets/", json=budget_create_data(), headers=token_header)
     budget_id = response.json()["id"]
     expense_id = response.json()["expenses"][0]["id"]
     assert response.status_code == 201
 
-    response = client.delete(f"/budgets/{budget_id}/expenses/{expense_id}")
+    response = client.delete(f"/budgets/{budget_id}/expenses/{expense_id}", headers=token_header)
     assert response.status_code == 204
     assert response.text == ""
 
-    response = client.get("/budgets/")
+    response = client.get("/budgets/", headers=token_header)
     assert response.status_code == 200
     assert response.json() == [
         {
@@ -231,5 +236,32 @@ def test_create_budget_and_delete_its_expense(client: TestClient, test_session: 
             "name": "testbudget",
             "income": {"id": 1, "name": "testincome", "amount": 1.23},
             "expenses": [],
+        }
+    ]
+
+
+def test_create_budget_and_share_it(client: TestClient, test_session: Session, token_header: dict):
+    for data in (userdata.dict(), UserCreate(username="brother", password="testpassword").dict()):
+        client.post("/users/", json=data)
+
+    response = client.post("/budgets/", json=budget_create_data(), headers=token_header)
+    budget_id = response.json()["id"]
+
+    response = client.post(
+        f"/budgets/{budget_id}/share", json=UserShareCreate(username="brother").dict(), headers=token_header
+    )
+    assert response.status_code == 201
+
+    brother_token_header = token_header_for_userdata(client, "brother", "testpassword")
+    response = client.get("/budgets/", headers=brother_token_header)
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": 1,
+            "name": "testbudget",
+            "income": {"id": 1, "name": "testincome", "amount": 1.23},
+            "expenses": [
+                {"id": 1, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}}
+            ],
         }
     ]

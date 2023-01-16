@@ -20,3 +20,7 @@ class UserCreate(BaseModel):
     def password_alphanumeric(cls, v):
         assert v.isalnum(), "must be alphanumeric"
         return v
+
+
+class UserShareCreate(BaseModel):
+    username: str

@@ -10,7 +10,8 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String(32), unique=True)
     hashed_password = Column(String(80))
-    budgets = relationship("Budget", back_populates="user", uselist=True)
+    budgets = relationship("Budget", back_populates="owner", uselist=True)
+    shared_budgets = relationship("BudgetSharedWithUsers", back_populates="user")
 
     def __repr__(self) -> str:
         return f"User(username={self.username}"
