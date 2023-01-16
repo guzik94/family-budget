@@ -11,7 +11,7 @@ router = APIRouter(prefix="/users")
 
 @router.get("/current", tags=["current user"], description="Get current user", status_code=status.HTTP_200_OK)
 async def get_user(current_user: UserInDB = Depends(get_current_user)) -> User:
-    return User(username=current_user.username)
+    return User.parse_obj(current_user)
 
 
 @router.post("/", tags=["user registration"], description="Register the user", status_code=status.HTTP_201_CREATED)
@@ -22,5 +22,5 @@ async def create_user(user: UserCreate, context: Context = Depends(get_context))
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="This username has already been taken"
             )
-        add_user(session, user.username, get_password_hash(user.password))
-        return User(username=user.username)
+        user_id = add_user(session, user.username, get_password_hash(user.password))
+        return User(id=user_id, username=user.username)

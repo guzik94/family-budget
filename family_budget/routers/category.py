@@ -11,4 +11,4 @@ router = APIRouter(prefix="/categories")
 @router.get("/", tags=["get categories"], description="Get all categories", status_code=status.HTTP_200_OK)
 async def get_categories(context: Context = Depends(get_context)):
     with context.session_factory.begin() as session:
-        return [Category(name=c.name) for c in query_categories(session)]
+        return [Category(id=c.id, name=c.name) for c in query_categories(session)]

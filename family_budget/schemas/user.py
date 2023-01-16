@@ -1,7 +1,9 @@
 from pydantic import BaseModel, validator
 
+from .base import SchemaBase
 
-class User(BaseModel):
+
+class User(SchemaBase):
     username: str
 
 

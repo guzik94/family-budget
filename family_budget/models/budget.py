@@ -15,6 +15,3 @@ class Budget(Base):
 
     income = relationship("Income", back_populates="budget", uselist=False)
     expenses = relationship("Expense", back_populates="budget", uselist=True)
-
-    def __repr__(self):
-        return f"Budget(name={self.name}, user_id={self.user_id})"

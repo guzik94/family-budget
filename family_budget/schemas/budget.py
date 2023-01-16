@@ -1,16 +1,17 @@
 from pydantic import BaseModel
 
-from .expense import Expense
-from .income import Income
+from .base import SchemaBase
+from .expense import Expense, ExpenseCreate
+from .income import Income, IncomeCreate
 
 
 class BudgetCreate(BaseModel):
     name: str
-    income: Income
-    expenses: list[Expense]
+    income: IncomeCreate
+    expenses: list[ExpenseCreate]
 
 
-class Budget(BaseModel):
+class Budget(SchemaBase):
     name: str
     income: Income
     expenses: list[Expense]

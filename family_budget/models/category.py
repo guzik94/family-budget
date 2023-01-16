@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 
 from . import Base
@@ -10,5 +10,4 @@ class Category(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(32))
 
-    expense_id = Column(Integer, ForeignKey("expenses.id"))
-    expense = relationship("Expense", back_populates="category", uselist=False)
+    expenses = relationship("Expense", back_populates="category", uselist=True)

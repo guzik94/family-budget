@@ -12,9 +12,10 @@ class Expense(Base):
     name = Column(String(32))
     amount = Column(Float)
     budget_id = Column(Integer, ForeignKey("budgets.id"))
-    budget = relationship("Budget", back_populates="expenses", foreign_keys=[budget_id], uselist=False)
+    budget = relationship("Budget", back_populates="expenses", uselist=False)
 
-    category = relationship(Category, back_populates="expense", uselist=False)
+    category_id = Column(Integer, ForeignKey("categories.id"))
+    category = relationship(Category, back_populates="expenses", uselist=False)
 
     def __repr__(self):
         return f"Expense(name={self.name}, amount={self.amount}, budget_id={self.budget_id})"

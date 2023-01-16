@@ -6,7 +6,9 @@ def query_user(session: Session, username: str) -> User | None:
     return session.query(User).filter(User.username == username).first()
 
 
-def add_user(session: Session, username: str, hashed_password: str) -> None:
+def add_user(session: Session, username: str, hashed_password: str) -> int:
     db_user = User(username=username, hashed_password=hashed_password)
     session.add(db_user)
-    session.commit()
+    session.flush()
+
+    return db_user.id
