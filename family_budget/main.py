@@ -1,10 +1,10 @@
-from family_budget.app import get_app  # noqa
+from family_budget.app import app  # noqa
 from family_budget.deps import get_engine
 from family_budget.models import Base
 from sqlalchemy import DDL
 
 
-def create_tables():
+def create_schema():
     engine = get_engine()
     with engine.begin() as conn:
         conn.execute(DDL(f"CREATE SCHEMA IF NOT EXISTS {Base.metadata.schema}"))
@@ -13,4 +13,4 @@ def create_tables():
     engine.dispose()
 
 
-create_tables()
+create_schema()

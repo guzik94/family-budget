@@ -29,3 +29,6 @@ def get_local_app(engine: Engine) -> FastAPI:
 def get_app() -> FastAPI:
     engine = get_engine()
     return get_local_app(engine)
+
+
+app = get_app()

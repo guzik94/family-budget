@@ -16,10 +16,11 @@ async def get_user(current_user: UserInDB = Depends(get_current_user)) -> User:
 
 @router.post("/", tags=["user registration"], description="Register the user", status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, context: Context = Depends(get_context)) -> User:
-    user_already_exists = query_user(context.session_factory, user.username) is not None
-    if user_already_exists:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="This username has already been taken"
-        )
-    add_user(context.session_factory, user.username, get_password_hash(user.password))
-    return User(username=user.username)
+    with context.session_factory.begin() as session:
+        user_already_exists = query_user(session, user.username) is not None
+        if user_already_exists:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="This username has already been taken"
+            )
+        add_user(session, user.username, get_password_hash(user.password))
+        return User(username=user.username)

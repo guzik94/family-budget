@@ -14,11 +14,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 def get_user(context, username) -> UserInDB | None:
-    user = query_user(context.session_factory, username)
-    if user:
-        return UserInDB(username=user.username, hashed_password=user.hashed_password, id=user.id)
-    else:
-        return None
+    with context.session_factory.begin() as session:
+        user = query_user(session, username)
+        if user:
+            return UserInDB(username=user.username, hashed_password=user.hashed_password, id=user.id)
+        else:
+            return None
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
