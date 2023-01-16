@@ -36,6 +36,7 @@ def recreate_db(engine):
 settings = DatabaseSettings()
 settings.database = "test"
 engine = create_sync_engine(settings)
+recreate_db(engine)
 
 
 def override_sessionmaker():
@@ -174,5 +175,58 @@ def test_create_budget_and_update_its_income(client: TestClient, test_session: S
             "expenses": [
                 {"id": 1, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}}
             ],
+        }
+    ]
+
+
+def test_create_budget_and_add_expense_to_it(client: TestClient, test_session: Session):
+    data = UserCreate(username="testuser", password="testpassword").dict()
+    client.post("/users/", json=data)
+
+    response = client.post("/budgets/", json=budget_create_data())
+    budget_id = response.json()["id"]
+
+    response = client.post(
+        f"/budgets/{budget_id}/expenses",
+        json=ExpenseCreate(name="added expense", amount=2.34, category="testcategory").dict(),
+    )
+    assert response.status_code == 201
+
+    response = client.get("/budgets/")
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": 1,
+            "name": "testbudget",
+            "income": {"id": 1, "name": "testincome", "amount": 1.23},
+            "expenses": [
+                {"id": 1, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}},
+                {"id": 2, "name": "added expense", "amount": 2.34, "category": {"id": 1, "name": "testcategory"}},
+            ],
+        }
+    ]
+
+
+def test_create_budget_and_delete_its_expense(client: TestClient, test_session: Session):
+    data = UserCreate(username="testuser", password="testpassword").dict()
+    client.post("/users/", json=data)
+
+    response = client.post("/budgets/", json=budget_create_data())
+    budget_id = response.json()["id"]
+    expense_id = response.json()["expenses"][0]["id"]
+    assert response.status_code == 201
+
+    response = client.delete(f"/budgets/{budget_id}/expenses/{expense_id}")
+    assert response.status_code == 204
+    assert response.text == ""
+
+    response = client.get("/budgets/")
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": 1,
+            "name": "testbudget",
+            "income": {"id": 1, "name": "testincome", "amount": 1.23},
+            "expenses": [],
         }
     ]
