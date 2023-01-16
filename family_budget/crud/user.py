@@ -9,6 +9,7 @@ def query_user(session: Session, username: str) -> User | None:
 def add_user(session: Session, username: str, hashed_password: str) -> int:
     db_user = User(username=username, hashed_password=hashed_password)
     session.add(db_user)
-    session.flush()
+    session.commit()
+    session.refresh(db_user)
 
     return db_user.id

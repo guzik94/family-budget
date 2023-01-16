@@ -27,14 +27,18 @@ def add_budget(session: Session, user_id: int, budget: BudgetCreate) -> Budget:
         ],
     )
     session.add(db_budget)
-    session.flush()
+    session.commit()
+    session.refresh(db_budget)
 
     return db_budget
 
 
-def update_budget_income(budget, income: IncomeCreate) -> Budget:
+def update_budget_income(session, budget, income: IncomeCreate) -> Budget:
     budget.income.name = income.name
     budget.income.amount = income.amount
+
+    session.commit()
+    session.refresh(budget)
 
     return budget
 
@@ -47,13 +51,12 @@ def add_budget_expense(session, budget, expense: ExpenseCreate) -> Budget:
     )
     session.commit()
     session.refresh(budget)
-
     return budget
 
 
 def delete_budget_expense(session, budget, budget_expense):
     budget.expenses.remove(budget_expense)
     session.commit()
-    session.flush()
+    session.refresh(budget)
 
     return budget

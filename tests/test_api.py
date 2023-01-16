@@ -3,7 +3,7 @@ from family_budget.app import app
 from family_budget.auth.service import get_current_user, get_password_hash
 from family_budget.crud.user import query_user
 from family_budget.database_settings import DatabaseSettings, create_sync_engine
-from family_budget.deps import Context, get_context
+from family_budget.deps import get_db
 from family_budget.models import Base
 from family_budget.schemas.auth import UserInDB
 from family_budget.schemas.budget import BudgetCreate
@@ -39,19 +39,22 @@ engine = create_sync_engine(settings)
 recreate_db(engine)
 
 
-def override_sessionmaker():
-    return sessionmaker(autocommit=False, autoflush=False, bind=engine)
+session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def override_get_context():
-    return Context(override_sessionmaker())
+def override_get_db():
+    db = session_factory()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 def override_get_current_user():
     return UserInDB(username="testuser", id=1, hashed_password=get_password_hash("testpassword"))
 
 
-app.dependency_overrides[get_context] = override_get_context
+app.dependency_overrides[get_db] = override_get_db
 app.dependency_overrides[get_current_user] = override_get_current_user
 
 
@@ -63,7 +66,7 @@ def client() -> TestClient:
 @pytest.fixture()
 def test_session():
     recreate_schema(engine)
-    with override_sessionmaker().begin() as session:
+    with session_factory.begin() as session:
         yield session
 
 
