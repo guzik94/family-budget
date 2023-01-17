@@ -3,7 +3,7 @@ import logging
 from family_budget.deps import get_engine
 from family_budget.routers import auth, budget, category, user
 from fastapi import FastAPI
-from fastapi_pagination import Page, add_pagination, paginate
+from fastapi_pagination import add_pagination
 from sqlalchemy.engine import Engine
 
 logger = logging.getLogger(__name__)

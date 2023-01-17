@@ -23,7 +23,7 @@ class BudgetSharedWithUsers(Base):
     __tablename__ = "budget_shared_with_users"
 
     budget_id = Column(Integer, ForeignKey("budgets.id"), primary_key=True)
-    budget = relationship("Budget", back_populates="shared_with")
+    budget = relationship("Budget", back_populates="shared_with", uselist=False)
 
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
-    user = relationship("User", back_populates="shared_budgets")
+    user = relationship("User", back_populates="shared_budgets", uselist=False)
