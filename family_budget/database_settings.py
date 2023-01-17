@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pydantic import BaseSettings, Field
 from sqlalchemy.engine import URL, Engine, create_engine
@@ -13,13 +13,13 @@ class DatabaseSettings(BaseSettings):
     host: str = Field(default="localhost", env="PGHOST")
     port: int = Field(default=5432, env="PGPORT")  # noqa: WPS432
     username: str = Field(default="postgres", env="PGUSER")
-    password: Optional[str] = Field(env="PGPASSWORD")
+    password: str | None = Field(env="PGPASSWORD")
     database: str = Field("postgres", env="PGDATABASE")
     drivername: str = Field("postgresql")
 
     @property
     def url(self) -> URL:
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "drivername": self.drivername,
             "host": self.host,
             "database": self.database,
