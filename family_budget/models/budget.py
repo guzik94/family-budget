@@ -16,7 +16,7 @@ class Budget(Base):
     income = relationship("Income", back_populates="budget", uselist=False)
     expenses = relationship("Expense", back_populates="budget", uselist=True)
 
-    shared_with = relationship("BudgetSharedWithUsers", back_populates="budget")
+    shared_with = relationship("BudgetSharedWithUsers", back_populates="budget", uselist=True)
 
 
 class BudgetSharedWithUsers(Base):

@@ -4,6 +4,7 @@ from .base import SchemaBase
 
 
 class Income(SchemaBase):
+    id: int
     name: str
     amount: float
 

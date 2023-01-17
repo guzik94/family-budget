@@ -4,6 +4,7 @@ from .base import SchemaBase
 
 
 class User(SchemaBase):
+    id: int
     username: str
 
 
@@ -22,5 +23,5 @@ class UserCreate(BaseModel):
         return v
 
 
-class UserShareCreate(BaseModel):
+class UserShareCreate(SchemaBase):
     username: str

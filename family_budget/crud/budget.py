@@ -25,6 +25,16 @@ def query_budget(session: Session, budget_id: int, user_id: int) -> Budget:
     return session.query(Budget).filter(Budget.id == budget_id, Budget.owner_id == user_id).first()
 
 
+def query_shared_budget(session: Session, budget_id: int, user_id: int) -> Budget:
+    budget = (
+        session.query(Budget)
+        .join(BudgetSharedWithUsers, Budget.id == BudgetSharedWithUsers.budget_id)
+        .filter(Budget.id == budget_id, BudgetSharedWithUsers.user_id == user_id)
+        .first()
+    )
+    return budget
+
+
 def add_budget(session: Session, user_id: int, budget: BudgetCreate) -> Budget:
     db_budget = Budget(
         name=budget.name,
@@ -75,5 +85,6 @@ def add_shared_user(session: Session, budget: Budget, user_id: int):
     share = BudgetSharedWithUsers(budget_id=budget.id, user_id=user_id)
     session.add(share)
     session.commit()
+    session.refresh(share)
     session.refresh(budget)
     return budget

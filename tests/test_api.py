@@ -123,6 +123,8 @@ def test_create_budget_and_assert_it_exists(client: TestClient, test_session: Se
             "expenses": [
                 {"id": 1, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}}
             ],
+            "owner": {"id": 1, "username": "testuser"},
+            "shared_with": [],
         }
     ]
 
@@ -142,6 +144,8 @@ def test_create_two_budgets(client: TestClient, test_session: Session, token_hea
             "expenses": [
                 {"id": 1, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}}
             ],
+            "owner": {"id": 1, "username": "testuser"},
+            "shared_with": [],
         },
         {
             "id": 2,
@@ -150,6 +154,8 @@ def test_create_two_budgets(client: TestClient, test_session: Session, token_hea
             "expenses": [
                 {"id": 2, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}}
             ],
+            "owner": {"id": 1, "username": "testuser"},
+            "shared_with": [],
         },
     ]
 
@@ -188,6 +194,8 @@ def test_create_budget_and_update_its_income(client: TestClient, test_session: S
             "expenses": [
                 {"id": 1, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}}
             ],
+            "owner": {"id": 1, "username": "testuser"},
+            "shared_with": [],
         }
     ]
 
@@ -214,6 +222,8 @@ def test_create_budget_and_add_expense_to_it(client: TestClient, test_session: S
                 {"id": 1, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}},
                 {"id": 2, "name": "added expense", "amount": 2.34, "category": {"id": 1, "name": "testcategory"}},
             ],
+            "owner": {"id": 1, "username": "testuser"},
+            "shared_with": [],
         }
     ]
 
@@ -236,6 +246,8 @@ def test_create_budget_and_delete_its_expense(client: TestClient, test_session: 
             "name": "testbudget",
             "income": {"id": 1, "name": "testincome", "amount": 1.23},
             "expenses": [],
+            "owner": {"id": 1, "username": "testuser"},
+            "shared_with": [],
         }
     ]
 
@@ -263,5 +275,7 @@ def test_create_budget_and_share_it(client: TestClient, test_session: Session, t
             "expenses": [
                 {"id": 1, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}}
             ],
+            "owner": {"id": 1, "username": "testuser"},
+            "shared_with": [{"user": {"id": 2, "username": "brother"}}],
         }
     ]

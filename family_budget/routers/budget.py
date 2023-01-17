@@ -6,6 +6,7 @@ from family_budget.crud.budget import (
     delete_budget_expense,
     query_budget,
     query_budgets,
+    query_shared_budget,
     query_shared_budgets,
     update_budget_income,
 )
@@ -53,6 +54,7 @@ async def update_income(
     session: Session = Depends(get_db),
 ) -> Budget:
     budget = query_budget(session, budget_id, current_user.id)
+    budget = budget or query_shared_budget(session, budget_id, current_user.id)
     if not budget:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Budget does not exist")
     budget = update_budget_income(session, budget, income)
@@ -72,6 +74,7 @@ async def add_expense(
     session: Session = Depends(get_db),
 ) -> Budget:
     budget = query_budget(session, budget_id, current_user.id)
+    budget = budget or query_shared_budget(session, budget_id, current_user.id)
     if not budget:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Budget does not exist")
     budget = add_budget_expense(session, budget, expense)
@@ -91,6 +94,7 @@ async def delete_expense(
     session: Session = Depends(get_db),
 ) -> None:
     budget = query_budget(session, budget_id, current_user.id)
+    budget = budget or query_shared_budget(session, budget_id, current_user.id)
     if not budget:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Budget does not exist")
     budget_expense = query_expense(session, budget_id, expense_id)
