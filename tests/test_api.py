@@ -284,3 +284,52 @@ def test_create_budgets_and_filter_by_name(client: TestClient, test_session: Ses
 
     response = client.get("/budgets/?name_filter=AC", headers=token_header)
     assert len(response.json()["items"]) == 0
+
+
+def test_create_budgets_and_filter_by_expense_category(client: TestClient, test_session: Session, token_header: dict):
+    categories = ["A", "B", "C", "ABC"]
+    for category in categories:
+        data = BudgetCreate(
+            name="testbudget",
+            income=IncomeCreate(name="testincome", amount=1.23),
+            expenses=[ExpenseCreate(name="testexpense", amount=1.23, category=category)],
+        ).dict()
+        client.post("/budgets/", json=data, headers=token_header)
+
+    response = client.get("/budgets/?category_filter=A", headers=token_header)
+    assert len(response.json()["items"]) == 2
+
+    response = client.get("/budgets/?category_filter=B", headers=token_header)
+    assert len(response.json()["items"]) == 2
+
+    response = client.get("/budgets/?category_filter=C", headers=token_header)
+    assert len(response.json()["items"]) == 2
+
+    response = client.get("/budgets/?category_filter=AB", headers=token_header)
+    assert len(response.json()["items"]) == 1
+
+    response = client.get("/budgets/?category_filter=BC", headers=token_header)
+    assert len(response.json()["items"]) == 1
+
+    response = client.get("/budgets/?category_filter=AC", headers=token_header)
+    assert len(response.json()["items"]) == 0
+
+
+def test_create_budgets_and_filter_by_name_and_expense_category(
+    client: TestClient, test_session: Session, token_header: dict
+):
+    data = BudgetCreate(
+        name="ABC",
+        income=IncomeCreate(name="testincome", amount=1.23),
+        expenses=[ExpenseCreate(name="testexpense", amount=1.23, category="ABC")],
+    ).dict()
+    client.post("/budgets/", json=data, headers=token_header)
+
+    response = client.get("/budgets/?name_filter=A&category_filter=A", headers=token_header)
+    assert len(response.json()["items"]) == 1
+
+    response = client.get("/budgets/?name_filter=D&category_filter=A", headers=token_header)
+    assert len(response.json()["items"]) == 0
+
+    response = client.get("/budgets/?name_filter=A&category_filter=D", headers=token_header)
+    assert len(response.json()["items"]) == 0

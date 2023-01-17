@@ -1,5 +1,6 @@
 from family_budget.crud.category import get_or_create_category
 from family_budget.models.budget import Budget, BudgetSharedWithUsers
+from family_budget.models.category import Category
 from family_budget.models.expense import Expense
 from family_budget.models.income import Income
 from family_budget.schemas.budget import BudgetCreate
@@ -8,29 +9,34 @@ from family_budget.schemas.income import IncomeCreate
 from sqlalchemy.orm import Session
 
 
-def query_budgets(session: Session, user_id: int, name: str) -> list[Budget]:
+def query_budgets(session: Session, user_id: int, name: str, category: str) -> list[Budget]:
+    query = session.query(Budget).filter(Budget.owner_id == user_id)
     if name:
-        return session.query(Budget).filter(Budget.owner_id == user_id).filter(Budget.name.like(f"%{name}%")).all()
-    else:
-        return session.query(Budget).filter(Budget.owner_id == user_id).all()
+        query = query.filter(Budget.name.ilike(f"%{name}%"))
+    if category:
+        query = (
+            query.join(Expense, Budget.id == Expense.budget_id)
+            .join(Category, Expense.category_id == Category.id)
+            .filter(Category.name.ilike(f"%{category}%"))
+        )
+    return query.all()
 
 
-def query_shared_budgets(session: Session, user_id: int, name: str) -> list[Budget]:
+def query_shared_budgets(session: Session, user_id: int, name: str, category: str) -> list[Budget]:
+    query = (
+        session.query(Budget)
+        .join(BudgetSharedWithUsers, Budget.id == BudgetSharedWithUsers.budget_id)
+        .filter(BudgetSharedWithUsers.user_id == user_id)
+    )
     if name:
-        return (
-            session.query(Budget)
-            .join(BudgetSharedWithUsers, Budget.id == BudgetSharedWithUsers.budget_id)
-            .filter(BudgetSharedWithUsers.user_id == user_id)
-            .filter(Budget.name.like(f"%{name}%"))
-            .all()
+        query = query.filter(Budget.name.ilike(f"%{name}%"))
+    if category:
+        query = (
+            query.join(Expense, Budget.id == Expense.budget_id)
+            .join(Category, Expense.category_id == Category.id)
+            .filter(Category.name.ilike(f"%{category}%"))
         )
-    else:
-        return (
-            session.query(Budget)
-            .join(BudgetSharedWithUsers, Budget.id == BudgetSharedWithUsers.budget_id)
-            .filter(BudgetSharedWithUsers.user_id == user_id)
-            .all()
-        )
+    return query.all()
 
 
 def query_budget(session: Session, budget_id: int, user_id: int) -> Budget:
