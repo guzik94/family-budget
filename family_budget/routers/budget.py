@@ -4,6 +4,7 @@ from family_budget.crud.budget import (
     add_budget_expense,
     add_shared_user,
     delete_budget_expense,
+    delete_budget_from_db,
     query_budget,
     query_budgets,
     query_shared_budget,
@@ -34,6 +35,21 @@ async def create_budget(
 ) -> Budget:
     db_budget = add_budget(session, current_user.id, budget)
     return Budget.from_orm(db_budget)
+
+
+@router.delete(
+    "/{budget_id}",
+    tags=["delete budget"],
+    description="Delete budget for current user",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_budget(
+    budget_id: int, current_user: UserInDB = Depends(get_current_user), session: Session = Depends(get_db)
+) -> None:
+    budget = query_budget(session, budget_id, current_user.id)
+    if not budget:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Budget not found")
+    delete_budget_from_db(session, budget)
 
 
 @router.get("/", tags=["get budgets"], description="Get budgets for current user", status_code=status.HTTP_200_OK)

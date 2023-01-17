@@ -64,6 +64,17 @@ def test_create_budget_and_assert_it_exists(client: TestClient, db_session, toke
     assert response.json() == page([budget_out()])
 
 
+def test_create_and_delete_budget(client: TestClient, db_session, token_header: dict):
+    response = client.post("/budgets/", json=budget_create_data(), headers=token_header)
+    budget_id = response.json()["id"]
+
+    response = client.delete(f"/budgets/{budget_id}", headers=token_header)
+    assert response.status_code == 204
+
+    response = client.get("/budgets/", headers=token_header)
+    assert response.json() == page([])
+
+
 def test_create_two_budgets(client: TestClient, db_session, token_header: dict):
     for _ in range(2):
         response = client.post("/budgets/", json=budget_create_data(), headers=token_header)

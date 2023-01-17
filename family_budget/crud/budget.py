@@ -106,3 +106,8 @@ def add_shared_user(session: Session, budget: Budget, user_id: int):
     session.refresh(share)
     session.refresh(budget)
     return budget
+
+
+def delete_budget_from_db(session: Session, budget: Budget):
+    session.delete(budget)
+    session.commit()
