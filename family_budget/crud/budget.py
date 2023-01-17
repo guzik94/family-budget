@@ -8,17 +8,29 @@ from family_budget.schemas.income import IncomeCreate
 from sqlalchemy.orm import Session
 
 
-def query_budgets(session: Session, user_id: int) -> list[Budget]:
-    return session.query(Budget).filter(Budget.owner_id == user_id).all()
+def query_budgets(session: Session, user_id: int, name: str) -> list[Budget]:
+    if name:
+        return session.query(Budget).filter(Budget.owner_id == user_id).filter(Budget.name.like(f"%{name}%")).all()
+    else:
+        return session.query(Budget).filter(Budget.owner_id == user_id).all()
 
 
-def query_shared_budgets(session: Session, user_id: int) -> list[Budget]:
-    return (
-        session.query(Budget)
-        .join(BudgetSharedWithUsers, Budget.id == BudgetSharedWithUsers.budget_id)
-        .filter(BudgetSharedWithUsers.user_id == user_id)
-        .all()
-    )
+def query_shared_budgets(session: Session, user_id: int, name: str) -> list[Budget]:
+    if name:
+        return (
+            session.query(Budget)
+            .join(BudgetSharedWithUsers, Budget.id == BudgetSharedWithUsers.budget_id)
+            .filter(BudgetSharedWithUsers.user_id == user_id)
+            .filter(Budget.name.like(f"%{name}%"))
+            .all()
+        )
+    else:
+        return (
+            session.query(Budget)
+            .join(BudgetSharedWithUsers, Budget.id == BudgetSharedWithUsers.budget_id)
+            .filter(BudgetSharedWithUsers.user_id == user_id)
+            .all()
+        )
 
 
 def query_budget(session: Session, budget_id: int, user_id: int) -> Budget:

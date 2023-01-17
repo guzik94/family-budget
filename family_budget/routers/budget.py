@@ -38,10 +38,12 @@ async def create_budget(
 
 @router.get("/", tags=["get budgets"], description="Get budgets for current user", status_code=status.HTTP_200_OK)
 async def get_budgets(
-    current_user: UserInDB = Depends(get_current_user), session: Session = Depends(get_db)
+    name_filter: str | None = None,
+    current_user: UserInDB = Depends(get_current_user),
+    session: Session = Depends(get_db),
 ) -> Page[Budget]:
-    own_budgets = [Budget.from_orm(b) for b in query_budgets(session, current_user.id)]
-    budgets_shared_with_user = [Budget.from_orm(b) for b in query_shared_budgets(session, current_user.id)]
+    own_budgets = [Budget.from_orm(b) for b in query_budgets(session, current_user.id, name_filter)]
+    budgets_shared_with_user = [Budget.from_orm(b) for b in query_shared_budgets(session, current_user.id, name_filter)]
     return paginate(own_budgets + budgets_shared_with_user)
 
 

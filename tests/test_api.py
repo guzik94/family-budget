@@ -259,3 +259,28 @@ def test_create_budget_and_share_it(client: TestClient, test_session: Session, t
             }
         ]
     )
+
+
+def test_create_budgets_and_filter_by_name(client: TestClient, test_session: Session, token_header: dict):
+    client.post("/budgets/", json=budget_create_data() | {"name": "A"}, headers=token_header)
+    client.post("/budgets/", json=budget_create_data() | {"name": "B"}, headers=token_header)
+    client.post("/budgets/", json=budget_create_data() | {"name": "C"}, headers=token_header)
+    client.post("/budgets/", json=budget_create_data() | {"name": "ABC"}, headers=token_header)
+
+    response = client.get("/budgets/?name_filter=A", headers=token_header)
+    assert len(response.json()["items"]) == 2
+
+    response = client.get("/budgets/?name_filter=B", headers=token_header)
+    assert len(response.json()["items"]) == 2
+
+    response = client.get("/budgets/?name_filter=C", headers=token_header)
+    assert len(response.json()["items"]) == 2
+
+    response = client.get("/budgets/?name_filter=AB", headers=token_header)
+    assert len(response.json()["items"]) == 1
+
+    response = client.get("/budgets/?name_filter=BC", headers=token_header)
+    assert len(response.json()["items"]) == 1
+
+    response = client.get("/budgets/?name_filter=AC", headers=token_header)
+    assert len(response.json()["items"]) == 0
