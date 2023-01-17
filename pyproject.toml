@@ -20,6 +20,7 @@ psycopg2-binary = "^2.9.5"
 python-jose = {version = "^3.3.0", extras = ["cryptography"]}
 passlib = {version = "^1.7.4", extras = ["bcrypt"]}
 python-multipart = "^0.0.5"
+fastapi-pagination = "^0.11.2"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.21.0"

@@ -20,6 +20,7 @@ from family_budget.schemas.income import IncomeCreate
 from family_budget.schemas.user import UserShareCreate
 from fastapi import Depends, HTTPException, status
 from fastapi.routing import APIRouter
+from fastapi_pagination import Page, paginate
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/budgets")
@@ -38,10 +39,10 @@ async def create_budget(
 @router.get("/", tags=["get budgets"], description="Get budgets for current user", status_code=status.HTTP_200_OK)
 async def get_budgets(
     current_user: UserInDB = Depends(get_current_user), session: Session = Depends(get_db)
-) -> list[Budget]:
+) -> Page[Budget]:
     own_budgets = [Budget.from_orm(b) for b in query_budgets(session, current_user.id)]
     budgets_shared_with_user = [Budget.from_orm(b) for b in query_shared_budgets(session, current_user.id)]
-    return own_budgets + budgets_shared_with_user
+    return paginate(own_budgets + budgets_shared_with_user)
 
 
 @router.put(
