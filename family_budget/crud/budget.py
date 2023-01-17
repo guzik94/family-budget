@@ -109,5 +109,6 @@ def add_shared_user(session: Session, budget: Budget, user_id: int):
 
 
 def delete_budget_from_db(session: Session, budget: Budget):
+    session.query(BudgetSharedWithUsers).filter(BudgetSharedWithUsers.budget_id == budget.id).delete()
     session.delete(budget)
     session.commit()
