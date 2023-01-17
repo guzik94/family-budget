@@ -4,14 +4,14 @@ services:
   family_budget_app:
     build: .
     depends_on:
-      - family_budget_db
+      - postgres
     ports:
       - "8000:8000"
     volumes:
       - ./:/app/
     restart: always
 
-  family_budget_db:
+  postgres:
     ports:
       - "5432:5432"
     image: postgres:15
@@ -19,7 +19,6 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: assignment
       POSTGRES_DB: assignment
-    command: -c listen_addresses='*'
     volumes:
       - db-family_budget_data:/var/lib/postgresql/data
     restart: always
