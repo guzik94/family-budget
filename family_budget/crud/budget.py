@@ -91,7 +91,7 @@ def add_budget_expense(session, budget, expense: ExpenseCreate) -> Budget:
     return budget
 
 
-def delete_budget_expense(session, budget, budget_expense):
+def delete_budget_expense(session, budget, budget_expense) -> None:
     budget.expenses.remove(budget_expense)
     session.commit()
     session.refresh(budget)
@@ -99,7 +99,7 @@ def delete_budget_expense(session, budget, budget_expense):
     return budget
 
 
-def add_shared_user(session: Session, budget: Budget, user_id: int):
+def add_shared_user(session: Session, budget: Budget, user_id: int) -> Budget:
     share = BudgetSharedWithUsers(budget_id=budget.id, user_id=user_id)
     session.add(share)
     session.commit()
@@ -108,7 +108,7 @@ def add_shared_user(session: Session, budget: Budget, user_id: int):
     return budget
 
 
-def delete_budget_from_db(session: Session, budget: Budget):
+def delete_budget_from_db(session: Session, budget: Budget) -> None:
     session.query(BudgetSharedWithUsers).filter(BudgetSharedWithUsers.budget_id == budget.id).delete()
     session.delete(budget)
     session.commit()

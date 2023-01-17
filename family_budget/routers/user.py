@@ -11,12 +11,12 @@ router = APIRouter(prefix="/users")
 
 
 @router.get("/current", tags=["current user"], description="Get current user", status_code=status.HTTP_200_OK)
-async def get_user(current_user: UserInDB = Depends(get_current_user)) -> User:
+def get_user(current_user: UserInDB = Depends(get_current_user)) -> User:
     return User.parse_obj(current_user)
 
 
 @router.post("/", tags=["user registration"], description="Register the user", status_code=status.HTTP_201_CREATED)
-async def create_user(user: UserCreate, session: Session = Depends(get_db)) -> User:
+def create_user(user: UserCreate, session: Session = Depends(get_db)) -> User:
     user_already_exists = query_user(session, user.username) is not None
     if user_already_exists:
         raise HTTPException(

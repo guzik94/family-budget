@@ -11,5 +11,5 @@ router = APIRouter(prefix="/categories")
 
 
 @router.get("/", tags=["get categories"], description="Get all categories", status_code=status.HTTP_200_OK)
-async def get_categories(session: Session = Depends(get_db)) -> Page[Category]:
+def get_categories(session: Session = Depends(get_db)) -> Page[Category]:
     return paginate([Category(id=c.id, name=c.name) for c in query_categories(session)])

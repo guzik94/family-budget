@@ -30,7 +30,7 @@ router = APIRouter(prefix="/budgets")
 @router.post(
     "/", tags=["create budget"], description="Create budget for current user", status_code=status.HTTP_201_CREATED
 )
-async def create_budget(
+def create_budget(
     budget: BudgetCreate, current_user: UserInDB = Depends(get_current_user), session: Session = Depends(get_db)
 ) -> Budget:
     db_budget = add_budget(session, current_user.id, budget)
@@ -43,7 +43,7 @@ async def create_budget(
     description="Delete budget for current user",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def delete_budget(
+def delete_budget(
     budget_id: int, current_user: UserInDB = Depends(get_current_user), session: Session = Depends(get_db)
 ) -> None:
     budget = query_budget(session, budget_id, current_user.id)
@@ -53,7 +53,7 @@ async def delete_budget(
 
 
 @router.get("/", tags=["get budgets"], description="Get budgets for current user", status_code=status.HTTP_200_OK)
-async def get_budgets(
+def get_budgets(
     name_filter: str | None = None,
     category_filter: str | None = None,
     current_user: UserInDB = Depends(get_current_user),
@@ -69,7 +69,7 @@ async def get_budgets(
 @router.put(
     "/{budget_id}/income", tags=["update income"], description="Update budget income", status_code=status.HTTP_200_OK
 )
-async def update_income(
+def update_income(
     budget_id: int,
     income: IncomeCreate,
     current_user: UserInDB = Depends(get_current_user),
@@ -89,7 +89,7 @@ async def update_income(
     description="Add expense to budget",
     status_code=status.HTTP_201_CREATED,
 )
-async def add_expense(
+def add_expense(
     budget_id: int,
     expense: ExpenseCreate,
     current_user: UserInDB = Depends(get_current_user),
@@ -109,7 +109,7 @@ async def add_expense(
     description="Delete expense from budget",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def delete_expense(
+def delete_expense(
     budget_id: int,
     expense_id: int,
     current_user: UserInDB = Depends(get_current_user),
@@ -133,7 +133,7 @@ async def delete_expense(
     description="Share budget with a user",
     status_code=status.HTTP_201_CREATED,
 )
-async def share_budget(
+def share_budget(
     user: UserShareCreate,
     budget_id: int,
     current_user: UserInDB = Depends(get_current_user),
@@ -146,7 +146,7 @@ async def share_budget(
     shared_user = query_user(session, user.username)
     if not shared_user:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Shared user does not exist")
-    if shared_user in budget.shared_with:
+    if shared_user in (shared.user for shared in budget.shared_with):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Budget is already shared with user")
 
     budget = add_shared_user(session, budget, shared_user.id)
