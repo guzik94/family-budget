@@ -11,5 +11,4 @@ RUN poetry install --only main
 
 EXPOSE 8000
 
-#CMD ["python", "-m", "family_budget"]
 ENTRYPOINT ["uvicorn", "family_budget.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
