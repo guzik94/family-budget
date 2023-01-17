@@ -161,14 +161,14 @@ def test_create_two_budgets(client: TestClient, test_session: Session, token_hea
 def test_get_categories(client: TestClient, test_session: Session, token_header: dict):
     response = client.get("/categories/")
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json() == page([])
 
     client.post("/budgets/", json=budget_create_data(), headers=token_header)
     client.post("/budgets/", json=budget_create_data(), headers=token_header)
 
     response = client.get("/categories/")
     assert response.status_code == 200
-    assert response.json() == [{"id": 1, "name": "testcategory"}]
+    assert response.json() == page([{"id": 1, "name": "testcategory"}])
 
 
 def test_create_budget_and_update_its_income(client: TestClient, test_session: Session, token_header: dict):
@@ -184,7 +184,9 @@ def test_create_budget_and_update_its_income(client: TestClient, test_session: S
 
     response = client.get("/budgets/", headers=token_header)
     assert response.status_code == 200
-    assert response.json() == page([budget_out() | {"income": {"id": 1, "name": "changed income name", "amount": 2.34}}])
+    assert response.json() == page(
+        [budget_out() | {"income": {"id": 1, "name": "changed income name", "amount": 2.34}}]
+    )
 
 
 def test_create_budget_and_add_expense_to_it(client: TestClient, test_session: Session, token_header: dict):
@@ -200,15 +202,17 @@ def test_create_budget_and_add_expense_to_it(client: TestClient, test_session: S
 
     response = client.get("/budgets/", headers=token_header)
     assert response.status_code == 200
-    assert response.json() == page([
-        budget_out()
-        | {
-            "expenses": [
-                {"id": 1, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}},
-                {"id": 2, "name": "added expense", "amount": 2.34, "category": {"id": 1, "name": "testcategory"}},
-            ]
-        }
-    ])
+    assert response.json() == page(
+        [
+            budget_out()
+            | {
+                "expenses": [
+                    {"id": 1, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}},
+                    {"id": 2, "name": "added expense", "amount": 2.34, "category": {"id": 1, "name": "testcategory"}},
+                ]
+            }
+        ]
+    )
 
 
 def test_create_budget_and_delete_its_expense(client: TestClient, test_session: Session, token_header: dict):
@@ -241,15 +245,17 @@ def test_create_budget_and_share_it(client: TestClient, test_session: Session, t
     brother_token_header = token_header_for_userdata(client, "brother", "testpassword")
     response = client.get("/budgets/", headers=brother_token_header)
     assert response.status_code == 200
-    assert response.json() == page([
-        {
-            "id": 1,
-            "name": "testbudget",
-            "income": {"id": 1, "name": "testincome", "amount": 1.23},
-            "expenses": [
-                {"id": 1, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}}
-            ],
-            "owner": {"id": 1, "username": "testuser"},
-            "shared_with": [{"user": {"id": 2, "username": "brother"}}],
-        }
-    ])
+    assert response.json() == page(
+        [
+            {
+                "id": 1,
+                "name": "testbudget",
+                "income": {"id": 1, "name": "testincome", "amount": 1.23},
+                "expenses": [
+                    {"id": 1, "name": "testexpense", "amount": 1.23, "category": {"id": 1, "name": "testcategory"}}
+                ],
+                "owner": {"id": 1, "username": "testuser"},
+                "shared_with": [{"user": {"id": 2, "username": "brother"}}],
+            }
+        ]
+    )
